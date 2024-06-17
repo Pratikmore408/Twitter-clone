@@ -4,7 +4,7 @@ import { generateTokenAndSetCookie } from "../library/utils/generatetoken.js";
 
 export const signup = async (req, res) => {
   try {
-    const { fullname, username, email, password } = req.body;
+    const { fullName, username, email, password } = req.body;
 
     const emailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailFormat.test(email)) {
@@ -30,7 +30,7 @@ export const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const newUser = new User({
-      fullname,
+      fullName,
       username,
       email,
       password: hashedPassword,
@@ -40,9 +40,9 @@ export const signup = async (req, res) => {
       generateTokenAndSetCookie(newUser._id, res);
       await newUser.save();
 
-      res.status(200).json({
+      res.status(201).json({
         _id: newUser._id,
-        fullname: newUser.fullname,
+        fullName: newUser.fullName,
         username: newUser.username,
         email: newUser.email,
         followers: newUser.followers,
@@ -61,13 +61,52 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  res.json({
-    data: "you hit login endpoints",
-  });
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user?.password || ""
+    );
+
+    if (!user || !isPasswordValid) {
+      return res.status(400).json({ error: "Invalid Credentials" });
+    }
+
+    generateTokenAndSetCookie(user._id, res);
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      email: user.email,
+      followers: user.followers,
+      following: user.following,
+      profileImg: user.profileImg,
+      coverImg: user.coverImg,
+    });
+  } catch (error) {
+    console.log("Error in Signup Controller", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 export const logout = async (req, res) => {
-  res.json({
-    data: "you hit logout endpoints",
-  });
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ data: "Logged out Successfully" });
+  } catch (error) {
+    console.log("Error in logout Controller", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.log("Error in getMe Controller", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 };
