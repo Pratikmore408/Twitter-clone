@@ -1,3 +1,6 @@
+import bcrypt from "bcryptjs";
+import { v2 as cloudinary } from "cloudinary";
+
 import Notification from "../models/notification.model.js";
 import User from "../models/user.model.js";
 
@@ -59,5 +62,111 @@ export const followUnfollowUser = async (req, res) => {
   } catch (error) {
     console.log("Error in followUnfollowUser controller", error.message);
     res.status(505).json(error.message);
+  }
+};
+
+export const getSuggestedUser = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const userFollowedByMe = await User.findById(userId).select("following");
+
+    const users = await User.aggregate([
+      {
+        $match: {
+          _id: { $ne: userId },
+        },
+      },
+      {
+        $sample: { size: 10 },
+      },
+    ]);
+
+    const filteredUser = users.filter(
+      (user) => !userFollowedByMe.following.includes(user._id)
+    );
+
+    const suggestedUser = filteredUser.slice(0, 4);
+
+    suggestedUser.forEach((user) => (user.password = null));
+
+    res.status(200).json(suggestedUser);
+  } catch (error) {
+    console.log("Error in getSuggestedUser controller", error.message);
+    res.status(500).json(error.message);
+  }
+};
+
+export const updateUserProfile = async (req, res) => {
+  const { fullName, email, username, currentPassword, newPassword, bio, link } =
+    req.body;
+  let { profileImg, coverImg } = req.body;
+
+  const userId = req.user._id;
+  try {
+    let user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (
+      (!newPassword && currentPassword) ||
+      (!currentPassword && newPassword)
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Please provide both the password" });
+    }
+
+    if (currentPassword && newPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch)
+        return res
+          .status(400)
+          .json({ message: "Currrent Password is Incorrect" });
+
+      if (newPassword.length < 6) {
+        return res
+          .status(400)
+          .json({ message: "Password must be 6 character long" });
+      }
+
+      user.password = await bcrypt.hash(newPassword, 12);
+    }
+
+    if (profileImg) {
+      if (user.profileImg) {
+        await cloudinary.uploader.destroy(
+          user.profileImg.split("/").pop().split(".")[0]
+        );
+      }
+      const uplodedProfileImg = await cloudinary.uploader.upload(profileImg);
+      profileImg = uplodedProfileImg.secure_url;
+    }
+
+    if (coverImg) {
+      if (user.coverImg) {
+        await cloudinary.uploader.destroy(
+          user.coverImg.split("/").pop().split(".")[0]
+        );
+      }
+      const uplodedCoverImg = await cloudinary.uploader.upload(coverImg);
+      coverImg = uplodedCoverImg.secure_url;
+    }
+
+    user.fullName = fullName || user.fullName;
+    user.email = email || user.email;
+    user.bio = bio || user.bio;
+    user.username = username || user.username;
+    user.link = link || user.link;
+    user.profileImg = profileImg || user.profileImg;
+    user.coverImg = coverImg || user.coverImg;
+
+    user = await user.save();
+
+    user.password = null;
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.log("Error in updateUserProfile controller", error.message);
+    res.status(500).json(error.message);
   }
 };
