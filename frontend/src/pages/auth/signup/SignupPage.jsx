@@ -127,7 +127,7 @@ const SignUpPage = () => {
           <p className="text-white text-lg">Already have an account?</p>
           <Link to="/login">
             <button className="btn rounded-full btn-primary text-white btn-outline w-full">
-              Sign in
+              Login
             </button>
           </Link>
         </div>

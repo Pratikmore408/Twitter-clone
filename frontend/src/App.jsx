@@ -22,6 +22,7 @@ function App() {
         if (!res.ok) {
           throw new Error(data.error || "Something went wrong");
         }
+        console.log(data);
 
         return data;
       } catch (error) {
@@ -39,9 +40,11 @@ function App() {
     );
   }
 
+  console.log(authUser);
+
   return (
     <div className="flex max-w-6xl mx-auto">
-      {authUser ? <Sidebar /> : <Navigate to="/login" />}
+      {authUser && <Sidebar />}
       <Routes>
         <Route
           path="/"
@@ -65,7 +68,7 @@ function App() {
         />
       </Routes>
 
-      {authUser ? <RightPanel /> : <Navigate to="/login" />}
+      {authUser && <RightPanel />}
 
       <Toaster />
     </div>
