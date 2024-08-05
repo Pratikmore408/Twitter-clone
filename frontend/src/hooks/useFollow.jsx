@@ -17,8 +17,6 @@ const useFollow = () => {
           throw new Error(data?.error || "Something went Wrong");
         }
 
-        console.log(data);
-
         return;
       } catch (error) {
         throw new Error(error);

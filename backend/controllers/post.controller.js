@@ -164,7 +164,6 @@ export const getLikedPost = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "user not found" });
     }
-    console.log(user.likedPosts);
 
     const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
       .populate({

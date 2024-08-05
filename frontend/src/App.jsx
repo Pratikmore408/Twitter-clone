@@ -39,7 +39,6 @@ function App() {
     );
   }
 
-  console.log(authUser);
   return (
     <div className="flex max-w-6xl mx-auto">
       {authUser ? <Sidebar /> : <Navigate to="/login" />}

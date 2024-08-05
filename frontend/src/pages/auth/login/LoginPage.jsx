@@ -51,7 +51,6 @@ const LoginPage = () => {
   useMutation();
   const handleSubmit = (e) => {
     e.preventDefault();
-    // console.log(formData);
     loginMutation(formData);
   };
 

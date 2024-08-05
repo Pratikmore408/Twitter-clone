@@ -35,11 +35,9 @@ const SignUpPage = () => {
         if (!res.ok) {
           throw new Error(data.error || "Failed To Create Account");
         }
-        console.log(data);
 
         return data;
       } catch (error) {
-        console.log(error);
         throw error;
       }
     },
@@ -53,7 +51,6 @@ const SignUpPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // console.log(formData);
     mutate(formData);
   };
 

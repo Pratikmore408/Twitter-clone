@@ -22,7 +22,6 @@ export const getUserProfile = async (req, res) => {
 
 export const followUnfollowUser = async (req, res) => {
   const { id } = req.params;
-  console.log(id);
   try {
     const userToModify = await User.findById(id);
     const currentUser = await User.findById(req.user._id);

@@ -38,7 +38,6 @@ const CreatePost = () => {
 
         return data;
       } catch (error) {
-        console.log(error);
         throw new Error(error);
       }
     },
